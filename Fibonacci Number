@@ -1,0 +1,30 @@
+def is_fibonacci():
+    ''' Reads in a string n from the keyboard, and return True and the position of the number in the Fibonacci series is returned, if 
+        n is a number in Fibonacci series, else return False.
+        Effects:
+            One value is read in
+        is_fibonacci: None -> Bool
+        Examples:
+        If the user enters "5" when is_fibonacci() is called, True and 6 is returned
+     
+        If the user enters "14" when is_fibonacci() is called, False is returned
+        Fibonacci sequence: 0,1,1,2,3,5,8,13,21,34,55,89......
+       '''
+    
+    position = 2
+    Fn_2 = 0 
+    Fn_1 = 1
+    Fn = int(input("Enter Number:"))
+    if Fn == 0: #Base case
+        return True,0
+    while Fn >= Fn_2 + Fn_1:
+        position += 1
+        if Fn == Fn_2 + Fn_1:
+            return True,position
+        else:
+            m = Fn_1
+            Fn_1 += Fn_2
+            Fn_2 = m
+    return False
+
+print(is_fibonacci())
