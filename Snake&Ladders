@@ -1,0 +1,542 @@
+import check
+class Gameboard:
+  ''' 
+    An Object that represents a specific gameboard
+    Fields: 
+       squares (listof (listof Nat)),
+       ladders (listof (listof Str)), 
+       snakes (listof (listof Str)),
+       players (listof (listof Str)),
+       ladderDict (dictof Str (listof Nat)),
+       snakeDict (dictof Str (listof Nat)),
+       playerDict (dictof (anyof "p1" "p2") Nat),
+       currentPlayer (anyof "p1" "p2")
+       
+    Requires: 
+       Each ladder Str to start with 'l' 
+         and end with the ladder number
+       Each snake Str to start with 's'
+         and end with the snake number
+       Each player Str to start with 'p' 
+         and end with the player number (1 or 2)
+       All of squares, ladders, snakes, and players 
+         are the same size
+    '''
+
+def __init__(self, squares, ladders, snakes, players, startingPlayer):
+    '''
+    Initializes self as a Gameboard object with the given squares,
+    ladders and snakes
+    
+    Effects:
+       Mutates self
+    
+    __init__: (listof (listof Nat)) (listof (listof Str))
+               (listof (listof Str)) (listof (listof Str)) 
+               (anyof ("p1" "p2")) -> None
+    '''
+
+    self.squares = squares
+    self.ladders = ladders
+    self.snakes = snakes
+    self.players = players
+    self.ladderDict = self.create_Dict(self.ladders)
+    self.snakeDict = self.create_Dict(self.snakes)
+    self.playerDict = self.create_playerDict()
+    self.currentPlayer = startingPlayer
+
+def __repr__(self):
+      ''' 
+      Returns string representation of self, containing 
+        squares list, and dictionaries 
+        
+      __repr__ Gameboard -> Str
+      '''
+      
+      s = self.squares
+      l = self.ladderDict
+      sn = self.snakeDict
+      p = self.playerDict
+      return str(s) + "\n" + str(l) + "\n" + str(sn) + "\n" + str(p)
+    
+    
+  def __eq__(self, other):
+    ''' 
+    Returns True if self and other have 
+      identical field values, and False otherwise
+      
+    __eq__ Gameboard Any -> bool
+    '''
+    
+return isinstance(other, Gameboard) and self.squares == other.squares \
+           and self.ladders == other.ladders and self.snakes == other.snakes \
+           and self.players == other.players and self.ladderDict == other.ladderDict \
+           and self.snakeDict == other.snakeDict  \
+           and self.playerDict == other.playerDict \
+           and self.currentPlayer == other.currentPlayer
+  
+  
+  
+  def create_Dict(self, travel):
+    '''
+    Returns a dictionary from the list travel. 
+    The keys in the returned dictionary are the labels in travel 
+    (either starting with 's'for snakes, and 'l' for ladders).
+    The associated values in the returned dictionary are the list of squares
+    (in increasing order) in that snake or ladder. 
+    
+    
+    create_Dict: Gameboard (listof (listof Str)) -> (dictof Str (listof Nat))
+    Requires: Strings in travel are either '' or a snake/ladder label
+    
+    Example: See 4x4 example below the code
+    '''
+    d = {}
+    size = len(self.squares)
+    for i in range(size):
+      numbers = self.squares[i]
+      row = travel[i]
+      for k in range(size):
+        if row[k] != "": 
+          if row[k] in d:
+            d[row[k]].append(numbers[k])
+          else:
+            d[row[k]] = [numbers[k]]
+            
+    # Arrange the lists into increasing order
+    for k in d: 
+      d[k].sort()
+    return d  
+  
+  
+  ## YOU MUST COMPLETE THIS METHOD
+  def create_playerDict(self): 
+    '''
+    Returns a dictionary from self.players list, with two keys ('p1' and 'p2'). 
+    The values associated with each key is the integer giving the player 
+    location on the board. 
+    
+    create_playerDict: Gameboard -> (dictof Str Nat)
+    
+    Example: See 4x4 example below the code
+    ''' 
+    # Note: You may find create_Dict helpful
+    d = {}
+    size = len(self.squares)
+    for i in range(size):
+      numbers = self.squares[i]
+      row = self.players[i]
+      for k in range(size):
+        if 'p1' in row[k]:
+          d['p1'] = numbers[k]
+        if 'p2' in row[k]:
+          d['p2'] = numbers[k]
+    return d
+  
+    
+  def _create_combined_snakes_ladders(self):
+    ''' 
+      A private method that combines the class variables snakes and ladders 
+      into a single list and returns this list
+      
+      _create_combined_snakes_ladders: Gameboard -> (listof squares)
+    '''        
+    length = len(self.snakes)
+    combinedL = []
+    for outerpos in range(length):
+      combinedL.append(self._combine_snakes_ladders_row(outerpos))
+    return combinedL  
+  
+  def _combine_snakes_ladders_row(self, outerpos):
+    ''' 
+      A private method to combine the snakes and ladders for an inner list 
+      ("row") into a single inner list.
+      
+      _combine_snakes_ladders_row: Gameboard Int -> (listof squares)
+    '''        
+    length = len(self.ladders[outerpos])
+    combinedInnerL = []
+    for pos in range(length):
+      if (self.ladders[outerpos][pos] == '') and (self.snakes[outerpos][pos] == ''):
+        combinedInnerL.append('')
+      elif self.ladders[outerpos][pos] != '':
+        combinedInnerL.append(self.ladders[outerpos][pos])
+      else:
+        combinedInnerL.append(self.snakes[outerpos][pos])
+    return combinedInnerL  
+  
+  def _create_str_output(self, row, serow):
+    ''' 
+      A private method to create a string from a list and returns this string
+        
+      _create_str_output: Gameboard (listof Str) Str -> Str
+    '''
+    strRow = serow
+    for item in row:
+      s_item = str(item)
+      if item == 'p1p2':
+        strRow = strRow + ' ' + s_item + ' |'
+      else:
+        strRow = strRow + ' ' * (4 - len(s_item)) + s_item + '  |'
+    strRow = strRow[:-1] + serow
+    return  strRow 
+  
+  def output_to_screen(self):
+    ''' 
+    Outputs the gameboard to the screen without the current player
+    
+    Effects: 
+       Prints the board
+    
+    output_to_screen: Gameboard -> None
+    '''    
+    
+    length = len(self.squares)
+    sl = (self._create_combined_snakes_ladders())
+    bars = (str('|' * ((len(self.squares[0]) * 7) + 3))) 
+    for pos in range(length):
+      print(bars)
+      print(self._create_str_output(self.squares[pos], "||"))
+      print(self._create_str_output(sl[pos], "||"))
+      print(self._create_str_output(self.players[pos], "!!"))
+    print(bars)
+    
+  def output_to_file(self, filename):
+    ''' 
+    Writes the Gameboard self to a file called filename, 
+    as writes the current player on the first line after the board.
+    There is no newline after the player on the last line. 
+    
+    Effects: 
+       Writes to a file
+
+    output_to_file: Gameboard Str -> None
+    '''    
+    ### Note: Looks at output_to_screen for assistance
+    length = len(self.squares)
+    sl = (self._create_combined_snakes_ladders())
+    bars = (str('|' * ((len(self.squares[0]) * 7) + 3))) 
+    file = open(filename,'w')
+    for pos in range(length):
+      file.writelines(bars + "\n")
+      file.writelines(self._create_str_output(self.squares[pos], "||") + "\n")
+      file.writelines(self._create_str_output(sl[pos], "||") + "\n")
+      file.writelines(self._create_str_output(self.players[pos], "!!") + "\n")
+    file.writelines(bars + "\n")
+    file.writelines(self.currentPlayer)
+    file.close()
+    
+   def update_player_position(self, pos):
+    '''
+    Updates the current player's position by mutating both the players list 
+    and the playerDict, to reflect player moving to position pos on the board.
+    
+    Effects:
+       Mutates self.players
+       Mutates self.playerDict
+    
+    update_player_position: Gameboard Nat -> None
+    Requires: 1 <= pos <= END position on board
+    '''
+    
+    size = len(self.squares)
+    for i in range(size):
+      numbers = self.squares[i]
+      row = self.players[i]
+      for k in range(size):
+        if self.currentPlayer == 'p1':
+          if 'p1' in row[k]:
+            row[k] = row[k].replace("p1","")
+          if numbers[k] == pos:
+            row[k] += 'p1'
+          self.playerDict['p1'] = pos
+          
+          if self.currentPlayer == 'p2':
+          if 'p2' in row[k]:
+            row[k] = row[k].replace("p2","")
+          if numbers[k] == pos:
+            row[k] += 'p2'
+          self.playerDict['p2'] = pos
+          
+    
+  def change_player(self):
+    '''
+    Changes currentPlayer to the other player (from 'p1' to 'p2', or 
+    'p2' to 'p1')
+    
+    Effects: 
+    * mutates currentPlayer 
+    
+    change_player: None -> None
+    '''
+    
+    if self.currentPlayer == 'p1':
+      self.currentPlayer = 'p2'
+    else:
+      self.currentPlayer = 'p1'
+
+import check
+import random
+import Gameboard
+
+#############################################################################
+## String constants
+
+## Messages for testing mode
+debugging_question = "Do you want to play the game in debugging mode? Enter y (yes) or n (no)."
+debugging_msg = "Enter a die value between 1 and 6: "
+
+## Messages involving files
+request_load = "Enter name of file to load board: "
+request_write = "Enter name of file to save board: "
+
+## Messages regarding menu options
+## Note: Use these as prompts for input - do not use print for these strings
+menu_prompt = "Enter r, p, s for your choice: "
+menu_prompt_again = "Invalid response. Enter r, p, s for your choice: "
+
+## Use format to add player number
+## Note: use print to display the menu
+menu = "Player {0}: You may (r) roll a die, or (p) print the current board, or (s) suspend the game" 
+valid_actions = 'rps'
+
+## Use format to indicate player, die roll, spaces past END, END, and new_pos
+end_back_msg = "Player {0} rolls {1} and moves {2} spaces past {3} and goes back to {4}" 
+
+## Use format to indicate player, die roll, and new position
+basic_roll = 'Player {0} rolls {1}, and moves to position {2}' 
+
+## Use format to indicate player and snake/ladder final position
+stop_msg = "Player {0} stops at position {1}" 
+
+## Use format to indicate player and start of ladder or snake
+ladder_start_msg1 = "Hurray! Player {0} landed on ladder {1} starting at position {2}" 
+snake_start_msg1 = "Uh oh! Player {0} landed on snake {1} starting at position {2}"  
+
+## Message for processing snakes/ladders
+ladder_start_msg2 = "Climbing..."
+snake_start_msg2 = "Falling..."
+
+## Use format to indicate snake/ladder interior positions
+continue_msg = "through {0}, " 
+
+## Use format to indicate player gets to roll after moving to new position with a 6
+six_msg = "Player {0} gets to roll again"  
+
+## Use format to indicate player suspending the game
+choose_suspend = "Player {0} has suspended the game"
+suspend_game = "Game suspended"
+
+## Game won messages
+game_over = "Game over!"
+win_p1 = "Player 1 wins!"
+win_p2 = "Player 2 wins!"
+########################################################################
+
+### Provided functions - do NOT changes these ###
+def roll(debug_mode):
+    ''' 
+    returns a random integer value between 1 and 6, inclusive, if debug_mode is False,
+    and returns value entered by the player if debug_mode is True
+    
+    Effects: 
+    Reads in an integer if debug_mode is True
+    
+    roll: Bool -> Nat
+    '''
+
+    if debug_mode:
+        return( int(input( debugging_msg )) )        
+    else:
+        return random.randint(1,6) 
+
+
+def player_location(b):
+    ''' 
+    Prints the position location of both player
+    given a Gameboard b
+    
+    Effects:
+       * Prints a message about player location
+    
+    player_location: Gameboard -> None
+    '''
+    s = "Player 1 at position: {0}. Player 2 at position: {1}"
+    print(s.format(b.playerDict['p1'], b.playerDict['p2']))   
+
+### Functions to complete ###
+    
+def find_ladder(b, pos):
+    '''
+    Returns the label of the ladder of Gameboard b on 
+    which position pos is the start for (if one exists)
+    and False if pos is not the start of any ladder. 
+    
+    find_ladder: Gameboard Nat -> (anyof Str False)
+    Requires: pos is a valid gameboard position for b
+    '''
+    for l in b.ladderDict:
+      if pos == b.ladderDict[l][0]:
+        return l
+    return False
+      
+def find_snake(b, pos):
+    '''
+    Returns the label of the snake of Gameboard b on which 
+    position pos is the start for (if one exists)
+    and False if pos is not the start of any snake. 
+    
+    find_snake: Gameboard Nat -> (anyof Str False)
+    Requires: pos is a valid gameboard position for b
+    '''
+    for l in b.snakeDict:
+      if pos == b.snakeDict[l][-1]:
+        return l
+    return False
+
+def choose_action(p):
+    ''' 
+    Prints an action menu for a player p to choose from,
+    and returns the action they entered, which must be 
+    one of r, p, s. 
+    
+    Effects:
+       * Prints menu options
+       * Reads in action until suitable action entered by player
+    
+    choose_action: Str -> Str
+    '''
+    print(menu.format(p))
+    choice = str(input(menu_prompt))
+    while (choice not in valid_actions):
+      print(menu_prompt_again)
+      choice = str(input(menu_prompt))
+    return choice
+    
+def play_game(): 
+    '''
+    Plays a game of snakes and ladders
+    
+    Effects: 
+       * Reads a board from a file
+       * Prints messages to players and reads in their answers
+       * Prints board to the screen and/or writes board to a file
+    
+    play_game: None -> None
+    '''
+    r = 0 #roll
+    position_prompt = "Player 1 at position: {0}. Player 2 at position: {1}"
+    game_mode = input(debugging_question)
+    board = input(request_load)
+    g = Gameboard.load_gameboard(board)
+    END = g.squares[0][0]
+    message = ""
+    while message != "endgame":
+      player_location(g)
+      choice = choose_action(g.currentPlayer)
+      if choice == 'r':
+        if game_mode == 'y':
+          r = int(roll(True))
+        if game_mode == 'n':
+          r = int(roll(False))
+        print(basic_roll.format(g.currentPlayer,r,(g.playerDict[g.currentPlayer] + r)))
+        g.playerDict[g.currentPlayer] += r #change position
+        while r == 6:
+          print(six_msg.format(g.currentPlayer))
+          player_location(g)
+          choice = choose_action(g.currentPlayer)
+          if choice == 'r':
+            if game_mode == 'y':
+              r = int(roll(True))
+            if game_mode == 'n':
+              r = int(roll(False))
+            print(basic_roll.format(g.currentPlayer,r,(g.playerDict[g.currentPlayer] + r)))
+            g.playerDict[g.currentPlayer] += r
+          
+          for s in g.snakeDict:
+            if g.playerDict[g.currentPlayer] == g.snakeDict[s][-1]:
+              print(snake_start_msg1.format(g.currentPlayer,s,g.snakeDict[s][-1]))
+            snake_message = snake_start_msg2
+            for i in g.snakeDict[s][::-1]:
+              snake_message += continue_msg.format(i)
+            snake_message += stop_msg.format(g.currentPlayer,g.snakeDict[s][0])
+            print(snake_message)
+          
+      # If Player land on Ladder leg:
+          for s in g.ladderDict:
+            if g.playerDict[g.currentPlayer] == g.ladderDict[s][0]:
+              print(ladder_start_msg1.format(g.currentPlayer,s,g.ladderDict[s][0]))
+              ladder_message = ladder_start_msg2
+              for i in g.ladderDict[s]:
+                ladder_message += continue_msg.format(i)
+              ladder_message += stop_msg.format(g.currentPlayer,g.ladderDict[s][-1])
+              print(ladder_message)
+      
+      # If Player land on Snake head
+      for s in g.snakeDict:
+        if g.playerDict[g.currentPlayer] == g.snakeDict[s][-1]:
+          print(snake_start_msg1.format(g.currentPlayer,s,g.snakeDict[s][-1]))
+          snake_message = snake_start_msg2
+          for i in g.snakeDict[s][::-1]:
+            snake_message += continue_msg.format(i)
+          snake_message += stop_msg.format(g.currentPlayer,g.snakeDict[s][0])
+          print(snake_message)
+          
+      # If Player land on Ladder leg:
+      for s in g.ladderDict:
+        if g.playerDict[g.currentPlayer] == g.ladderDict[s][0]:
+          print(ladder_start_msg1.format(g.currentPlayer,s,g.ladderDict[s][0]))
+          ladder_message = ladder_start_msg2
+          for i in g.ladderDict[s]:
+            ladder_message += continue_msg.format(i)
+          ladder_message += stop_msg.format(g.currentPlayer,g.ladderDict[s][-1])
+          print(ladder_message)
+      
+      #print(g.playerDict[g.currentPlayer])    
+      
+      #Exceed END
+      if g.playerDict[g.currentPlayer] > END:
+        print(end_back_msg.format(g.currentPlayer,r,
+        g.playerDict[g.currentPlayer]-END,2*END - g.playerDict[g.currentPlayer]))
+        g.playerDict[g.currentPlayer] = 2*END - g.playerDict[g.currentPlayer]
+        
+      # update player's position:
+      g.update_player_position(g.playerDict[g.currentPlayer])
+      if choice == 'p':
+        g.output_to_screen()
+        
+      # Save and suspend the game:
+      if choice == 's':
+        save_board = input(request_write)
+        g.output_to_file(save_board)
+        print(suspend_game)
+        message = "endgame"
+      
+      if g.playerDict[g.currentPlayer] == END:
+        print(game_over)
+        if g.currentPlayer == 'p1':
+          print(win_p1)
+          message = "endgame"
+        if g.currentPlayer == 'p2':
+          print(win_p2)
+          message = "endgame"
+      else:
+        if g.currentPlayer == 'p1':
+          g.currentPlayer = 'p2'
+        else:
+          g.currentPlayer = 'p1'
+          
+play_game()
+
+
+# Fix roll of 6
+g = Gameboard.load_gameboard("gb4x4.txt")
+print(g.squares[0][0])
+print(g.playerDict[g.currentPlayer] + roll(False))
+check.expect("Test1",find_ladder(g, 3),"l2")
+check.expect("Test2",find_snake(g, 15),"s1")
+
+
+    
+  
+    
