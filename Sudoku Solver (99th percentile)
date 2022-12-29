@@ -1,0 +1,613 @@
+from copy import deepcopy
+
+class Solution:
+
+    def convertBoardToInts(self, board):
+        for i in range(0, 9):
+            for j in range(0, 9):
+                board[i][j] = str(board[i][j][0])
+
+    def my_remove(self, arr, target):
+        change_made = False
+        for i in arr:
+            if i == target:
+                arr.remove(target)
+                change_made = True
+        return change_made
+
+    def fillBoard(self, board):
+        for i in range(0, 9):
+            line = []
+            for j in range(0, 9):
+                line.append([1, 2, 3, 4, 5, 6, 7, 8, 9])
+            board.append(line)
+
+    def printBoard(self, board):
+        for vertical in range(0, 3):
+            for i in range(0, 3):
+                for ver in range(0, 3):
+                    for column in range(0, 3): 
+                        for j in range(0, 3):
+                            for hor in range(0, 3):
+                                value = ver * 3 + hor + 1
+                                x = vertical * 3 + i
+                                y = column * 3 + j
+                                if not value in board[x][y]:
+                                    value = " "
+                                print(value, end = " ")
+                            if j < 2:
+                                print("", end = ". ")
+                            else:
+                                print("", end = "| ")
+                    print()
+                if i < 2:
+                    print()
+                else :
+                    for a in range(70):
+                        print("-", end = "")
+                    print()
+
+    def solved(self, board):
+        for i in range(0, 9):
+            for j in range(0, 9):
+                if len(board[i][j]) != 1:
+                    return False
+        return True
+
+    def getAssumptions(self, board):
+        assumptions = []
+        min_count = 10
+        min_i = 0
+        min_j = 0
+        for i in range(0, 9):
+            for j in range(0, 9):
+                l = len(board[i][j])
+                if 1 < l < min_count:
+                    min_count = l
+                    min_i = i
+                    min_j = j
+
+        for v in board[min_i][min_j]:
+            assumptions.append([min_i, min_j, v])
+
+        return assumptions
+
+
+    def areRowsLegal(self, board):
+        for i in range(0, 9):
+            used_v = []
+            for j in range(0, 9):
+                if len(board[i][j]) == 1:
+                    if not board[i][j] in used_v:
+                        used_v.append(board[i][j])
+                    else:
+                        return False
+        return True
+
+    def areColumnsLegal(self, board):
+        for j in range(0, 9):
+            used_v = []
+            for i in range(0, 9):
+                if len(board[i][j]) == 1:
+                    if not board[i][j] in used_v:
+                        used_v.append(board[i][j])
+                    else:
+                        return False
+        return True
+
+    def areSquaresLegal(self, board):
+        for line in range(0, 3):
+            for column in range(0, 3):
+                used_v = []
+                for i in range(0, 3):
+                    for j in range(0, 3):
+                        x = line*3 + i
+                        y = column*3 + j
+                        if len(board[x][y]) == 1:
+                            if not board[x][y] in used_v:
+                                used_v.append(board[x][y])
+                            else:
+                                return False
+        return True
+
+    def isBoardLegal(self, board):
+        legal = True
+        legal = legal and self.areRowsLegal(board)
+        if not legal:
+            return legal
+        legal = legal and self.areColumnsLegal(board)
+        if not legal:
+            return legal
+        legal = legal and self.areSquaresLegal(board)
+        return legal
+
+    def fillInitialConditions(self, board, initial):
+        for i in range(0, 9):
+            for j in range(0, 9):
+                if initial[i][j] != ".":
+                    board[i][j] = [int(initial[i][j])]
+
+    def duplicate_horizontalElimination(self, board):
+        change_made = False
+        for i in range(0, 9):
+            targets = []
+            for j in range(0, 9):
+                if len(board[i][j]) == 1:
+                    targets.append(board[i][j][0])
+            for j in range(0, 9):
+                if len(board[i][j]) != 1:
+                    for target in targets:
+                        if self.my_remove(board[i][j], target):
+                            change_made = True
+        return change_made
+
+    def duplicate_verticalElimination(self, board):
+        change_made = False
+        for i in range(0, 9):
+            targets = []
+            for j in range(0, 9):
+                if len(board[j][i]) == 1:
+                    targets.append(board[j][i][0])
+            for j in range(0, 9):
+                if len(board[j][i]) != 1:
+                    for target in targets:
+                        if self.my_remove(board[j][i], target):
+                            change_made = True
+        return change_made
+
+    def duplicate_squareElimination(self, board):
+        change_made = False
+        for line in range(0, 3):
+            for column in range(0, 3):
+                targets = []
+                for i in range(0, 3):
+                    for j in range(0, 3):
+                        x = i + line*3
+                        y = j + column*3
+                        if len(board[x][y]) == 1:
+                            targets.append(board[x][y][0])
+                for i in range(0, 3):
+                    for j in range(0, 3):
+                        x = i + line*3
+                        y = j + column*3
+                        if len(board[x][y]) != 1:
+                            for target in targets:
+                                if self.my_remove(board[x][y], target):
+                                    change_made = True
+        return change_made
+
+    def duplicate_eliminate(self, board):
+        change_made = False
+        change_made = change_made or self.duplicate_horizontalElimination(board)
+        change_made = change_made or self.duplicate_verticalElimination(board)
+        change_made = change_made or self.duplicate_squareElimination(board)
+        return change_made
+
+    def unique_horizontalElimination(self, board):
+        change_made = False
+        for i in range(0, 9):
+            for n in range(1, 10):
+                count = 0
+                last_seen = -1
+                for j in range(0, 9):
+                    if n in board[i][j]:
+                        count += 1
+                        last_seen = j
+                if count == 1 and len(board[i][last_seen]) > 1:
+                    board[i][last_seen] = [n]
+                    change_made = True
+        return change_made
+
+    def unique_verticalElimination(self, board):
+        change_made = False
+        for j in range(0, 9):
+            for n in range(1, 10):
+                count = 0
+                last_seen = -1
+                for i in range(0, 9):
+                    if n in board[i][j]:
+                        count += 1
+                        last_seen = i
+                if count == 1 and len(board[last_seen][j]) > 1:
+                    board[last_seen][j] = [n]
+                    change_made = True
+        return change_made
+
+    def unique_squareElimination(self, board):
+        change_made = False
+        for line in range(0, 3):
+            for column in range(0, 3):
+                for n in range(1, 10):
+                    count = 0
+                    last_seen_x = 99
+                    last_seen_y = 99
+
+                    for i in range(0, 3):
+                        for j in range(0, 3):
+                            x = i + line*3
+                            y = j + column*3
+                            if n in board[x][y]:
+                                count += 1
+                                last_seen_x = x
+                                last_seen_y = y
+                    if count == 1 and len(board[last_seen_x][last_seen_y]) > 1:
+                        board[last_seen_x][last_seen_y] = [n]
+                        change_made = True
+        return change_made
+
+    def unique_elimination(self, board):
+        change_made = False
+        change_made = change_made or self.unique_horizontalElimination(board)
+        change_made = change_made or self.unique_verticalElimination(board)
+        change_made = change_made or self.unique_squareElimination(board)
+        return change_made
+
+    def group_horizontalElimination(self, board):
+        change_made = False
+        for size in range(2, 8):
+            for i in range(0, 9):
+                for j1 in range(0, 9):
+                    n2 = 9
+                    if size < 2:
+                        n2 = j1+2
+                    for j2 in range(j1+1, n2):
+                        n3 = 9
+                        if size < 3:
+                            n3 = j2+2
+                        for j3 in range(j2+1, n3):
+                            n4 = 9
+                            if size < 4:
+                                n4 = j3+2
+                            for j4 in range(j3+1, n4):
+                                n5 = 9
+                                if size < 5:
+                                    n5 = j4+2
+                                for j5 in range(j4+1, n5):
+                                    n6 = 9
+                                    if size < 6:
+                                        n6 = j5+2
+                                    for j6 in range(j5+1, n6):
+                                        n7 = 9
+                                        if size < 7:
+                                            n7 = j6+2
+                                        for j7 in range(j6+1, n7):
+                                            n8 = 9
+                                            if size < 8:
+                                                n8 = j7+2
+                                            for j8 in range(j7+1, n8):
+                                                js = [j1, j2, j3, j4, j5, j6, j7, j8]
+                                                js = js[:size]
+                                                items = []
+                                                next_loop = False
+                                                for j in js:
+                                                    if j > 8 or len(board[i][j]) > size:
+                                                        next_loop = True
+                                                        break
+                                                    for item in board[i][j]:
+                                                        if not item in items:
+                                                            items.append(item)
+                                                if next_loop == False and len(items) == size:
+                                                    # group found
+                                                    for j in range(0, 9):
+                                                        if j not in js:
+                                                            for target in items:
+                                                                if self.my_remove(board[i][j], target):
+                                                                    change_made = True
+        return change_made
+
+    def group_verticalElimination(self, board):
+        change_made = False
+        for size in range(2, 8):
+            for j in range(0, 9):
+                for i1 in range(0, 9):
+                    n2 = 9
+                    if size < 2:
+                        n2 = i1+2
+                    for i2 in range(i1+1, n2):
+                        n3 = 9
+                        if size < 3:
+                            n3 = i2+2
+                        for i3 in range(i2+1, n3):
+                            n4 = 9
+                            if size < 4:
+                                n4 = i3+2
+                            for i4 in range(i3+1, n4):
+                                n5 = 9
+                                if size < 5:
+                                    n5 = i4+2
+                                for i5 in range(i4+1, n5):
+                                    n6 = 9
+                                    if size < 6:
+                                        n6 = i5+2
+                                    for i6 in range(i5+1, n6):
+                                        n7 = 9
+                                        if size < 7:
+                                            n7 = i6+2
+                                        for i7 in range(i6+1, n7):
+                                            n8 = 9
+                                            if size < 8:
+                                                n8 = i7+2
+                                            for i8 in range(i7+1, n8):
+                                                iis = [i1, i2, i3, i4, i5, i6, i7, i8]
+                                                iis = iis[:size]
+                                                items = []
+                                                next_loop = False
+                                                for i in iis:
+                                                    if i > 8 or len(board[i][j]) > size:
+                                                        next_loop = True
+                                                        break
+                                                    for item in board[i][j]:
+                                                        if not item in items:
+                                                            items.append(item)
+                                                if next_loop == False and len(items) == size:
+                                                    # group found
+                                                    for i in range(0, 9):
+                                                        if i not in iis:
+                                                            for target in items:
+                                                                if self.my_remove(board[i][j], target):
+                                                                    change_made = True
+        return change_made
+
+    def group_squareElimination(self, board):
+        change_made = False
+
+        for line in range(0, 3):
+            for column in range(0, 3):
+                for size in range(2, 8):
+                    for i in range(0, 9):
+                        for j1 in range(0, 9):
+                            n2 = 9
+                            if size < 2:
+                                n2 = j1+2
+                            for j2 in range(j1+1, n2):
+                                n3 = 9
+                                if size < 3:
+                                    n3 = j2+2
+                                for j3 in range(j2+1, n3):
+                                    n4 = 9
+                                    if size < 4:
+                                        n4 = j3+2
+                                    for j4 in range(j3+1, n4):
+                                        n5 = 9
+                                        if size < 5:
+                                            n5 = j4+2
+                                        for j5 in range(j4+1, n5):
+                                            n6 = 9
+                                            if size < 6:
+                                                n6 = j5+2
+                                            for j6 in range(j5+1, n6):
+                                                n7 = 9
+                                                if size < 7:
+                                                    n7 = j6+2
+                                                for j7 in range(j6+1, n7):
+                                                    n8 = 9
+                                                    if size < 8:
+                                                        n8 = j7+2
+                                                    for j8 in range(j7+1, n8):
+                                                        js = [j1, j2, j3, j4, j5, j6, j7, j8]
+                                                        js = js[:size]
+                                                        items = []
+                                                        next_loop = False
+                                                        for j in js:
+                                                            x = 3*line + int(j / 3)
+                                                            y = 3*column + int(j % 3)
+                                                            if j > 8 or len(board[x][y]) > size: # <-- board
+                                                                next_loop = True
+                                                                break
+                                                            for item in board[x][y]: # <-- board
+                                                                if not item in items:
+                                                                    items.append(item)
+                                                        if next_loop == False and len(items) == size:
+                                                            # group found
+                                                            for j in range(0, 9):
+                                                                x = 3*line + int(j / 3)
+                                                                y = 3*column + int(j % 3)
+                                                                if j not in js:
+                                                                    for target in items:
+                                                                        if self.my_remove(board[x][y], target): # <-- board
+                                                                            change_made = True
+        return change_made
+        
+    def group_elimination(self, board):
+        change_made = False
+        change_made = change_made or self.group_horizontalElimination(board)
+        change_made = change_made or self.group_verticalElimination(board)
+        change_made = change_made or self.group_squareElimination(board)
+        return change_made
+
+    def extreme_horizontalElimination(self, board):
+        change_made = False
+        for line in range(0, 3):
+            for v in range(1, 10):
+                taken_rows = [[False, False, False], [False, False, False], [False, False, False]]
+                for column in range(0, 3):
+                    for i in range(0, 3):
+                        for j in range(0, 3):
+                            if v in board[i+line*3][j+column*3]:
+                                taken_rows[column][i] = True
+                print(taken_rows)
+
+
+                ch_made = True
+                itr_count = 0
+                while ch_made:
+                    ch_made = False
+
+                    for i in range(0, 3):
+                        count_true = 0
+                        for column in range(0, 3):
+                            if taken_rows[column][i]:
+                                count_true += 1
+                                last_seen_column = column
+                                last_seen_i = i
+                        if count_true == 1:
+                            for ii in range(0, 3):
+                                if ii != last_seen_i and taken_rows[last_seen_column][ii]:
+                                    taken_rows[last_seen_column][ii] = False
+                                    ch_made = True
+
+                    for column in range(0, 3):
+                        count_true = 0
+                        for i in range(0, 3):
+                            if taken_rows[column][i]:
+                                count_true += 1
+                                last_seen_column = column
+                                last_seen_i = i
+                        if count_true == 1:
+                            for column in range(0, 3):
+                                if column != last_seen_column and taken_rows[column][last_seen_i]:
+                                    taken_rows[column][last_seen_i] = False
+                                    ch_made = True
+                    itr_count += 1
+
+                for column in range(0, 3):
+                    for i in range(0, 3):
+                        if not taken_rows[column][i]:
+                            for j in range(0, 3):
+                                if self.my_remove(board[i+line*3][j+column*3], v):
+                                    change_made = True
+        return change_made
+
+    def extreme_verticalElimination(self, board):
+        change_made = False
+        for column in range(0, 3):
+            for v in range(1, 2):
+                taken_columns = [[False, False, False], [False, False, False], [False, False, False]]
+                for line in range(0, 3):
+                    for j in range(0, 3):
+                        for i in range(0, 3):
+                            if v in board[i+line*3][j+column*3]:
+                                taken_columns[line][j] = True
+                print(taken_columns)
+
+
+                ch_made = True
+                itr_count = 0
+                while ch_made:
+                    ch_made = False
+
+                    for j in range(0, 3):
+                        count_true = 0
+                        for line in range(0, 3):
+                            if taken_columns[line][j]:
+                                count_true += 1
+                                last_seen_line = line
+                                last_seen_j = j
+                        if count_true == 1:
+                            for jj in range(0, 3):
+                                if jj != last_seen_j and taken_columns[last_seen_line][jj]:
+                                    taken_columns[last_seen_line][jj] = False
+                                    ch_made = True
+
+                    for line in range(0, 3):
+                        count_true = 0
+                        for j in range(0, 3):
+                            if taken_columns[line][j]:
+                                count_true += 1
+                                last_seen_line = line
+                                last_seen_j = j
+                        if count_true == 1:
+                            for line in range(0, 3):
+                                if line != last_seen_line and taken_columns[line][last_seen_j]:
+                                    taken_columns[line][last_seen_j] = False
+                                    ch_made = True
+                    itr_count += 1
+
+                for line in range(0, 3):
+                    for j in range(0, 3):
+                        if not taken_columns[line][j]:
+                            for i in range(0, 3):
+                                if self.my_remove(board[i+line*3][j+column*3], v):
+                                    change_made = True
+        return change_made
+
+
+    def extreme_elimination(self, board):
+        change_made = False 
+        change_made = change_made or self.extreme_horizontalElimination(board)
+        change_made = change_made or self.extreme_verticalElimination(board)
+        return change_made
+
+    def eliminate(self, board):
+        change_made = True
+        i = 0
+        while change_made:
+            change_made = False
+            change_made = change_made or self.duplicate_eliminate(board)
+            change_made = change_made or self.unique_elimination(board)
+            #change_made = change_made or self.group_elimination(board)
+            #change_made = change_made or self.extreme_elimination(board)
+            i += 1
+            print("iteration {}".format(i))
+            #printBoard(board)
+
+
+    def backtrack(self, board, depth):
+        print("backtrack call")
+        assumptions = self.getAssumptions(board)
+
+
+        goodAssumptionFound = False
+        for assumption in assumptions:
+            i = assumption[0]
+            j = assumption[1]
+            v = assumption[2]
+            new_board = deepcopy(board)
+            new_board[i][j].remove(v)
+            self.eliminate(new_board)
+            found_solution = False
+            if self.isBoardLegal(new_board):
+                if self.solved(new_board):
+                    #printBoard(new_board)
+                    return (True, deepcopy(new_board))
+                result = self.backtrack(new_board, depth + 1)
+                if result != None:
+                    found_solution = result[0]
+                    solution = result[1]
+                    goodAssumptionFound = True
+            if found_solution:
+                return (True, solution)
+        if not goodAssumptionFound:
+            return (False, [])
+
+    def solveSudoku(self, inputBoard):
+        inits = deepcopy(inputBoard)
+        board = []
+        self.fillBoard(board)
+        self.fillInitialConditions(board, inits)
+        self.eliminate(board)
+        if not self.solved(board):
+            result = self.backtrack(board, 0)
+            board = result[1]
+        else:
+            print("No backtracking")
+
+        self.printBoard(board)
+
+        self.convertBoardToInts(board)
+        for i in range(0, 9):
+            for j in range(0, 9):
+                inputBoard[i][j] = board[i][j]
+
+board = [[".", ".", ".", ".", ".", ".", ".", ".", "."],
+         [".", ".", ".", ".", ".", ".", ".", ".", "."], 
+         [".", ".", ".", ".", ".", ".", ".", ".", "."], 
+         [".", ".", ".", ".", ".", ".", ".", ".", "."], 
+         [".", ".", ".", ".", ".", ".", ".", ".", "."], 
+         [".", ".", ".", ".", ".", ".", ".", ".", "."], 
+         [".", ".", ".", ".", ".", ".", ".", ".", "."], 
+         [".", ".", ".", ".", ".", ".", ".", ".", "."], 
+         [".", ".", ".", ".", ".", ".", ".", ".", "."]]
+
+board = [[".", "7", ".", ".", ".", "1", ".", ".", "5"],
+         [".", "4", ".", "5", "2", ".", ".", "6", "."], 
+         [".", ".", "2", ".", ".", "3", ".", ".", "."], 
+         [".", ".", ".", "1", ".", ".", ".", ".", "."], 
+         [".", ".", "8", "4", "5", ".", ".", ".", "7"], 
+         ["7", ".", ".", ".", ".", ".", ".", "3", "."], 
+         [".", ".", ".", ".", ".", "2", ".", ".", "."], 
+         [".", ".", "4", "7", "8", ".", ".", ".", "3"], 
+         [".", "6", ".", ".", ".", ".", "9", ".", "."]]
+
+s = Solution()
+s.solveSudoku(board)
