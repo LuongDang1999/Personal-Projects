@@ -1,0 +1,188 @@
+class WizardingMoney(object):    
+    # YOUR CODE HERE
+    gname="galleon"
+    sname="sickle"
+    kname="knut"
+    galtosick = 17
+    sicktonut = 29
+    def __init__(self,g,s,k):
+        """
+        take number of galleons, sickles and knuts in that order. 
+
+        Parameters:
+        -----------
+        g - galleon
+        s - sickles
+        k - knuts
+
+        """
+
+        # galleon,sickles and knuts are data attributes
+        # they MUST be prefixed by self.
+        self.knuts = g*(self.galtosick)*(self.sicktonut) + s*(self.sicktonut) + k
+        
+        
+    def __str__(self):
+        """
+        Convert the total to the highest currency units.
+        1 galleon = 17 sickles
+        1 sickle = 29 knuts => 
+        1 galleon = 493 knuts
+        So for example 31 knuts should be printed out as "1 sickle, 2 knuts".
+        """
+
+        _outstr = ""
+
+        [galleons, sickles, knuts] = [0,0,self.knuts]
+        
+        while knuts >= self.sicktonut:
+            knuts -= self.sicktonut
+            sickles += 1
+        
+        while sickles >= self.galtosick:
+            sickles -= self.galtosick
+            galleons += 1
+        
+        # galleon printout
+        if galleons != 0:
+            if galleons > 1:
+                poss = "s" # possessiveness for plural 
+            else:
+                poss = "" # possessiveness for singular
+            
+            if (sickles != 0 or knuts != 0):
+                comma = "," #Verify is comma required or not 
+            else:
+                comma = ""
+            _outstr += f"{galleons} {self.gname}{poss}{comma} "  
+            
+        # sickles printout
+        if sickles != 0:
+            if sickles > 1:
+                poss = "s" # possessiveness for plural 
+            else:
+                poss = "" # possessiveness for singular
+            
+            if (knuts != 0):
+                comma = "," #Verify is comma required or not 
+            else:
+                comma = ""
+            _outstr += f"{sickles} {self.sname}{poss}{comma} "
+            
+            
+        # knuts prinout 
+        if knuts != 0:
+            if knuts > 1:
+                poss = "s" # possessiveness for plural 
+            else:
+                poss = "" # possessiveness for singular
+            
+            _outstr += f"{knuts} {self.kname}{poss} "
+    
+        
+        # We then return this out string.
+        return _outstr
+    
+    
+    def rounding(self,knut):
+        return round(knut)
+    
+    def __add__(self, other):
+        return self.__class__(0, 0, self.knuts + other.knuts)
+    
+    def __sub__(self, other):
+        return self.__class__(0, 0, self.knuts - other.knuts)
+    
+    def __mul__(self, other):
+        if isinstance(other, (float, int)):
+            return self.__class__(0, 0, self.rounding(self.knuts * other))
+    
+    def __rmul__(self, other):
+        return self.__mul__(other)
+    
+    def __truediv__(self,other):
+        if (type(other) == float) or (type(other) == int):
+            return self.__class__(0,0,self.rounding(self.knuts/other))
+        elif type(other) == type(self):
+            return self.knuts/other.knuts
+    
+    def __lt__(self, other):
+        return self.knuts<other.knuts
+    
+    def __gt__(self, other):
+        return self.knuts>other.knuts
+    
+    def __le__(self, other):
+        return self.knuts<=other.knuts
+    
+    def __ge__(self, other):
+        return self.knuts>=other.knuts
+    
+    def __eq__(self, other):
+        return self.knuts==other.knuts
+    
+    def __neq__(self, other):
+        return self.knuts!=other.knuts
+        
+=============================================================
+def harry_ron_shopping(harry, ron):
+    
+    print("Harry has                     :", harry)
+    print("Ron has                       :", ron)
+    print("Together they have            :", harry + ron)
+    print()
+
+    butterbeer = WizardingMoney(3,0,0) # 3 galleons
+    butterbeer_with_tax = 1.15*butterbeer # inc 15% HST (Hogwarts Sales Tax)
+    print(f"A keg of butterbeer costs     : {butterbeer}, or {butterbeer_with_tax}( with tax)")
+
+    if (harry + ron >= butterbeer_with_tax):
+        print("They have enough to buy a keg!")
+    
+        if harry > ron:
+            print("Ron will owe Harry            :", butterbeer_with_tax/2-ron)
+        elif ron > harry:
+            print("Harry will owe Ron            :", butterbeer_with_tax/2-harry)
+        else:
+            print("They will split the cost equally")
+            
+    else:
+        print("They do not have enough to buy a keg after accounting for tax")
+        
+===============================================================================
+harry = WizardingMoney(1, 10, 57) # 1 galleon, 10 sickles, 57 knuts
+ron = WizardingMoney(0, 27, 1) # 27 sickles, 1 knut
+harry_ron_shopping(harry, ron)
+
+ron += WizardingMoney(0, 4, 1)
+harry_ron_shopping(harry, ron)
+
+print(f"Ron has {(ron/harry-1)*100:.1f}% more money than Harry")
+
+================================================================================
+
+class HourMinuteSecond(WizardingMoney):
+    # YOUR CODE HERE
+    gname = "hour"
+    sname = "minute"
+    kname = "second"
+    galtosick = 60
+    sicktonut = 60
+    
+================================================================================
+
+penalty_start = HourMinuteSecond(0, 19, 42)
+penalty_duration = HourMinuteSecond(0, 2, 0)
+
+powerplay_this_period = HourMinuteSecond(0,20,0)-penalty_start
+print("Power play this period:", powerplay_this_period)
+
+powerplay_next_period = penalty_duration - powerplay_this_period
+print("Power play next period:", powerplay_next_period)
+
+=================================================================================
+
+marathon_time = HourMinuteSecond(4, 21, 0)
+print("The average time to complete a mile in the marathon is", marathon_time/26.2)
+
+===================================================================================
